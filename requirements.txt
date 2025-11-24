@@ -1,0 +1,33 @@
+# Core Deep Learning Framework
+torch>=1.9.0
+torchvision>=0.10.0
+
+# Configuration Management
+ml-collections>=0.1.0
+
+# Data Processing
+numpy
+pandas
+scipy
+scikit-learn
+
+# Image Processing
+Pillow
+# Utilities
+tqdm
+pyyaml
+termcolor
+rich
+
+# Tensor Operations
+einops
+
+# Optional: Experiment Tracking (commented out in code but available)
+# wandb>=0.12.0
+
+# Matplotlib for visualization (used in some scripts)
+matplotlib
+
+# Model libraries
+transformers
+timm
