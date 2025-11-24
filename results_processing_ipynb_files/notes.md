@@ -1,0 +1,1 @@
+The files in this folder are the ones that I used to generate a lot of the insights for the paper. The code isnt clean and still has a lot of my file paths hard-coded in but the analyses should be able to be re-made. 
