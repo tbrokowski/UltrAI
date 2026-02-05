@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import os
 import argparse
+import re
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -20,23 +21,24 @@ import urllib.parse
 logging.basicConfig(level=logging.INFO)
 from tqdm import tqdm
 
+from dotenv import load_dotenv
 
-#Butterfly credentials (overridden by CLI args in main)
-username = ''
-password = ''
-archivename = ''
+load_dotenv()
+
+butterfly_uname = os.getenv("BUTTERFLY_UNAME")
+butterfly_password = os.getenv("BUTTERFLY_PASSWORD")
+butterfly_archive = os.getenv("BUTTERFLY_ARCHIVE")
 
 #Download directory (overridden by CLI args in main)
 download_dir = ''
 videofolder = 'Uncleaned'
 
-
 def extract_info_from_page():
-    sleep(10)
+    sleep(5)
     rows = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//tr[@data-bni-id='DataGridTableRow']")))
     for row in rows:
         try:
-            cell = row.find_element(By.CLASS_NAME, 'DataGridTable-module--last-frozen--5Qjle')
+            cell = row.find_element(By.CLASS_NAME, 'last-frozen') #'DataGridTable-module--last-frozen') #--5Qjle')
             
             a_tag = cell.find_element(By.TAG_NAME, 'a')
             span_tag = cell.find_element(By.CLASS_NAME, "flex-grow.font-bold.truncate")
@@ -54,7 +56,9 @@ def go_to_next_page():
     next_button.click()
 
 def extract_video_urls_from_page():
-    groups = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'relative rounded group w-[100px] h-[100px] AspectRatioBox-CssProp1_Component-module--cls2--5tOys AspectRatioBox-CssProp1_Component-module--cls1--6B+CF ')]")))
+    sleep(5)
+    groups = driver.find_element(By.XPATH,"//div[@data-bni-id='ExamImageRoll']").find_elements(By.XPATH,"./*")
+    #groups = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'relative rounded group w-[100px] h-[100px] AspectRatioBox-CssProp1_Component-module--cls2--5tOys AspectRatioBox-CssProp1_Component-module--cls1--6B+CF ')]")))
     videos = []
     for group in groups:
         inset_div = group.find_element(By.XPATH, ".//div[contains(@class, 'inset-0 absolute')]")
@@ -140,15 +144,21 @@ def download_video_draft(video_url):
         sleep(3)
         
         # Find the download button and get its href
-        download_button = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.XPATH, "//a[@data-bni-id='DownloadButton']"))
-        )
+        #download_button = WebDriverWait(driver, 15).until(
+        #    EC.presence_of_element_located((By.XPATH, "//*[@data-bni-id='DownloadButton']"))
+        #)
+        #download_url = download_button.get_attribute('href')
+        #if not download_url:
+        #    logging.error("No download URL found in download button")
+        #    return False
+
+        video = driver.find_element(By.XPATH,"//video[@data-bni-id='StudyImageVideo']")
+        download_url = video.get_attribute('src')
         
-        download_url = download_button.get_attribute('href')
         if not download_url:
-            logging.error("No download URL found in download button")
+            logging.error("No download URL found in video element")
             return False
-        
+
         logging.info(f"Found download URL: {download_url}")
         
         # Extract filename from URL
@@ -242,24 +252,24 @@ def download_video(videos):
             
             success = False
             
-            if is_draft:
-                logging.info("Video is in draft state, using direct download method")
-                success = download_video_draft(video_url)
-            else:
-                logging.info("Video is signed, using original download method")
-                success = download_video_signed(video_url)
-                
-                # If signed method failed, try draft method as fallback
-                if not success:
-                    logging.warning("Signed download failed, attempting fallback to direct download method")
-                    try:
-                        success = download_video_draft(video_url)
-                        if success:
-                            logging.info("Fallback to direct download succeeded!")
-                        else:
-                            logging.error("Both signed and direct download methods failed")
-                    except Exception as fallback_error:
-                        logging.error(f"Fallback download method also failed: {fallback_error}")
+            #if is_draft:
+            logging.info("Video is in draft state, using direct download method")
+            success = download_video_draft(video_url)
+            #else:
+            #    logging.info("Video is signed, using original download method")
+            #    success = download_video_signed(video_url)
+            #    
+            #    # If signed method failed, try draft method as fallback
+            #    if not success:
+            #        logging.warning("Signed download failed, attempting fallback to direct download method")
+            #        try:
+            #            success = download_video_draft(video_url)
+            #            if success:
+            #                logging.info("Fallback to direct download succeeded!")
+            #            else:
+            #                logging.error("Both signed and direct download methods failed")
+            #        except Exception as fallback_error:
+            #            logging.error(f"Fallback download method also failed: {fallback_error}")
             
             if not success:
                 logging.error(f"Failed to download video from {video_url}")
@@ -358,7 +368,7 @@ def init_session(download_directory, video_folder, headless=False):
     options.add_experimental_option('prefs', prefs)
 
     driver_local = webdriver.Chrome(options=options)
-    wait_local = WebDriverWait(driver_local, 20)
+    wait_local = WebDriverWait(driver_local, 40)
 
     return driver_local, wait_local, videofolderpath_local, current_downloadspath_local
 
@@ -366,7 +376,12 @@ def login_and_open_archive(driver_local, wait_local, user, pwd, archive_name):
     """Log into Butterfly Cloud and open the specified archive."""
     driver_local.get("https://cloud.butterflynetwork.com/")
 
-    email_field = wait_local.until(EC.presence_of_element_located((By.XPATH, "//input[@data-bni-id='emailField']")))
+    driver.maximize_window()
+
+    tmp = driver_local.find_element(By.XPATH, "//div[@id='app']")
+
+    #email_field = wait_local.until(EC.presence_of_element_located((By.XPATH, "//input[@data-bni-id='emailField']")))
+    email_field = driver_local.find_element(By.XPATH, "//input[@data-bni-id='emailField']")
     email_field.clear()
     email_field.send_keys(user)
 
@@ -376,12 +391,13 @@ def login_and_open_archive(driver_local, wait_local, user, pwd, archive_name):
 
     login_button = driver_local.find_element(By.XPATH, "//button[@data-bni-id='loginButton']")
     login_button.click()
-
+    
     link = WebDriverWait(driver_local, 20).until(
         EC.presence_of_element_located(
             (By.XPATH, "//span[contains(text(), '{}')]/ancestor::a".format(archive_name))
         )
     )
+    #link = driver_local.find_element(By.XPATH, "//a[span[text()='{}']]".format(archive_name))
     href = link.get_attribute('href')
     link.click()
     return href
@@ -397,6 +413,9 @@ def run(user, pwd, archive_name, download_directory, video_folder, headless=Fals
 
         # Collecting info from all pages (shared with extract_info_from_page)
         file_info = set()
+
+        # TODO: remove 
+        #counter = 0 # JJVV: tmp counter for debugging
         while True:
             extract_info_from_page()
             try:
@@ -404,6 +423,11 @@ def run(user, pwd, archive_name, download_directory, video_folder, headless=Fals
             except Exception as e:
                 print("No more pages or an error occurred:", e)
                 break
+            
+            #counter += 1
+
+            #if counter > 4:
+            #    break
 
         # Determine which files to download
         new_file_info = set()
@@ -412,7 +436,7 @@ def run(user, pwd, archive_name, download_directory, video_folder, headless=Fals
             logging.info(f"No specific IDs provided, downloading all {len(file_info)} files")
         else:
             for f in file_info:
-                if f[1].split(',')[0] in ids_to_gather:
+                if re.match(ids_to_gather,f[1]): #f[1].split(',')[0] in ids_to_gather:
                     new_file_info.add(f)
             logging.info(f"Filtered to {len(new_file_info)} files based on ID list")
 
@@ -438,16 +462,21 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
-    args = parse_args()
-    ids_list = [i.strip() for i in args.ids.split(',') if i.strip()] if args.ids else None
+
+    download_dir = "/home/josh/devel/UltrAI/data/video/"
+    videofolder = "Uncleaned"
+    headless = False
+    ids_to_gather = None
+
+    #ids_list = ["OP001"], #[i.strip() for i in args.ids.split(',') if i.strip()] if args.ids else None
     run(
-        user=args.username,
-        pwd=args.password,
-        archive_name=args.archive,
-        download_directory=args.__dict__["download_dir"],
-        video_folder=args.videofolder,
-        headless=args.headless,
-        ids_to_gather=ids_list,
+        user=butterfly_uname,#args.username,
+        pwd=butterfly_password,#args.password,
+        archive_name=butterfly_archive, #args.archive,
+        download_directory=download_dir, #args.__dict__["download_dir"],
+        video_folder=videofolder, #args.videofolder,
+        headless=False, #args.headless,
+       ids_to_gather=r"\d{2}-\d{2,}" #,ihs_list,
     )
     
 #     python UltrAI/data/butterflycloudscraper.py \
