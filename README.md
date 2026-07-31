@@ -1,17 +1,36 @@
 # ULTR-AI
 
-**Deep learning for tuberculosis and lung pathology classification from lung ultrasound**
+**Ultrasound-led tuberculosis recognition using artificial intelligence**
 
-ULTR-AI is a research codebase for developing and evaluating deep learning models that classify tuberculosis (TB) and lung ultrasound (LUS) pathology patterns. It supports patient-level TB classification across multiple ultrasound views and image-level classification of individual pathology features.
+ULTR-AI is a research codebase for developing and evaluating artificial intelligence models for pulmonary tuberculosis (TB) triage from lung ultrasound (LUS). It implements patient-level TB prediction across multiple ultrasound views and image-level detection of human-recognizable LUS pathology signs.
 
-> **Research use only:** ULTR-AI is not a certified medical device and must not be used for clinical diagnosis or patient-management decisions without appropriate validation and regulatory review.
+The associated prospective cohort study is available as a preprint:
 
-## Scope
+> Suttels V, Brokowski T, Wachinou AP, et al. *Lung Ultrasound for the Detection of Pulmonary Tuberculosis Using Expert- and AI-Guided Interpretation: A Prospective Cohort Study*. SSRN. 2025. [doi:10.2139/ssrn.5174193](https://doi.org/10.2139/ssrn.5174193).
 
-The repository provides two principal workflows:
+> **Research use only:** ULTR-AI is not a certified medical device and must not be used for clinical diagnosis or patient-management decisions without external validation, appropriate regulatory review, and integration into a governed clinical workflow. The linked manuscript is a preprint and has not been peer reviewed.
 
-1. **Patient-level TB classification** using multiple LUS images per participant and attention-based feature aggregation.
-2. **Image-level pathology classification** for A-lines, B-lines, coalescing B-lines, consolidations, nodules, and pleural effusion.
+## Scientific scope
+
+The manuscript describes three complementary approaches:
+
+1. **ULTR-AI** predicts TB directly from LUS images using deep learning.
+2. **ULTR-AI[signs]** first detects human-recognizable LUS pathology signs and then predicts TB risk using a machine-learning model.
+3. **ULTR-AI[max]** combines the two approaches using the maximum predicted TB-risk score.
+
+This repository provides the underlying workflows for:
+
+- Patient-level TB classification using multiple LUS images and learned feature aggregation
+- Image-level classification of A-lines, B-lines, coalescing B-lines, consolidations or nodules, and pleural effusion
+- Diagnostic-performance evaluation using sensitivity, specificity, ROC–AUC, precision–recall AUC, and related metrics
+
+## Study context
+
+The associated study was a prospective cohort study conducted among symptomatic patients at a tertiary center in urban Benin. A trained operator performed a standardized 14-point sliding-scan LUS protocol; two blinded, independent readers reviewed the images; and a same-day single-sputum Xpert MTB/RIF Ultra assay served as the microbiological reference standard.
+
+Of 760 people screened, 504 were included in the analysis and 192 (38%) had bacteriologically confirmed TB. The analyzed cohort had a median age of 40 years (IQR 30–52); 196 participants (39%) were female, 78 (15%) were people with HIV, and 66 (13%) had previous TB.
+
+These figures describe the manuscript cohort, not a claim of external validity. Independent validation in other populations, settings, operators, and devices is required.
 
 ## Repository structure
 
@@ -25,8 +44,10 @@ UltrAI/
 ├── network_architecture/       # Model and pooling architectures
 ├── utilities/                  # Configuration and shared utilities
 ├── data/
-│   ├── labels/                 # Study IDs and outcome labels
-│   └── Splits/                 # Predefined train/validation/test folds
+│   ├── clinical_data/          # Study-level clinical variables
+│   ├── labels/                 # Study IDs and analysis labels
+│   ├── Splits/                 # Predefined train/validation/test folds
+│   └── README.md               # Provenance, schema, and governance notes
 ├── requirements.txt
 ├── CITATION.cff
 └── LICENSE
@@ -34,7 +55,7 @@ UltrAI/
 
 ## Installation
 
-Python 3.9 or newer is recommended. A CUDA-capable GPU is recommended for training but is not required for basic code inspection or CPU execution.
+Python 3.9 or newer is recommended. A CUDA-capable GPU is recommended for training but is not required for code inspection or CPU execution.
 
 ```bash
 git clone https://github.com/tbrokowski/UltrAI.git
@@ -48,34 +69,16 @@ python -m pip install -r requirements.txt
 
 Run commands from the repository root so that the local packages resolve correctly.
 
-## Data organization
+## Data
 
-The patient-level workflow expects the following layout:
+See [`data/README.md`](data/README.md) for:
 
-```text
-data/
-├── images/
-│   ├── 12345_QAID_1.png
-│   ├── 12345_QAIG_1.png
-│   └── ...
-├── labels/
-│   └── sensitivity_analysis_labels.csv
-└── Splits/
-    ├── Fold_0.csv
-    ├── Fold_1.csv
-    ├── Fold_2.csv
-    ├── Fold_3.csv
-    └── Fold_4.csv
-```
+- Study provenance and cohort-level descriptors
+- File-level schemas and label interpretation
+- Split organization and leakage-prevention requirements
+- Ethics, consent, privacy, and licensing boundaries
 
-The label file contains:
-
-- `record_id`: pseudonymous study participant identifier
-- `TB Label`: binary TB outcome label
-
-Each split file contains `train_ids`, `valid_ids`, and `test_ids`. Image filenames encode the study identifier and anatomical scan site.
-
-Access to and redistribution of research data must remain consistent with the relevant consent, ethics approval, and data-use agreements. Do not add linkage keys or information that would permit participant re-identification.
+The repository includes coded participant identifiers and clinical variables. Coded or pseudonymous data are not necessarily anonymous. Users are responsible for confirming that their access and intended use comply with the applicable consent, ethics approval, data-use agreements, institutional policy, and law.
 
 ## Usage
 
@@ -132,28 +135,38 @@ Train, validation, and test predictions can be exported as CSV files. Model chec
 
 ## Reproducibility
 
-The repository records the default random seed, predefined cross-validation folds, model configuration, and evaluation procedures. Before creating the manuscript release:
+The repository records a default random seed, predefined cross-validation folds, model configuration, and evaluation procedures. For a manuscript-aligned analysis:
 
-1. Validate the full workflow in a clean environment.
-2. Export the exact working dependency versions to a lock file.
-3. Record the final model configuration and random seed.
-4. Confirm that the archived release matches the code used for the reported results.
-5. Document how authorized researchers can obtain any non-redistributable data or model artifacts.
+1. Use a tagged, archived software release rather than the moving `main` branch.
+2. Record the exact dependency environment, model configuration, random seed, and hardware.
+3. Preserve participant-level separation across training, validation, and test sets.
+4. Report which outcome definition and sensitivity-analysis label file were used.
+5. Confirm that the archived release matches the code used to generate the reported results.
+
+## Ethics, funding, and competing interests
+
+As reported in the associated manuscript:
+
+- The University of Parakou local ethics committee for biomedical research approved the protocol on 18 May 2021 (reference `0407/CLERB-UP/P/SP/R/SA`).
+- All participants provided written informed consent.
+- The Swiss Pulmonary League funded the study.
+- The authors declared no competing interests.
+
+These statements describe the reported study. They do not independently authorize redistribution or secondary use of participant-level data.
 
 ## Citation
 
-Citation metadata are provided in [`CITATION.cff`](CITATION.cff). After the manuscript release is archived in Zenodo, add the assigned DOI to that file and place the Zenodo badge at the top of this README.
+Citation metadata are provided in [`CITATION.cff`](CITATION.cff). It distinguishes between:
 
-Suggested software title:
+- **The software release**, which should receive its own version-specific archival DOI after a GitHub release is deposited in Zenodo
+- **The associated research article**, which has the SSRN DOI [`10.2139/ssrn.5174193`](https://doi.org/10.2139/ssrn.5174193)
 
-> *ULTR-AI: Lung Ultrasound Tuberculosis and Pathology Classification*
-
-For academic work, cite the version-specific Zenodo DOI corresponding to the exact release used in the study.
+Until a software DOI is minted, cite the exact repository version or commit used and cite the associated manuscript. Do not use the SSRN article DOI as the software DOI.
 
 ## License
 
-This project is licensed under the [Apache License 2.0](LICENSE).
+The source code is licensed under the [Apache License 2.0](LICENSE). This software license does **not** grant rights to participant data, clinical records, images, annotations, model weights, or other third-party material unless those materials are explicitly identified as covered by the license.
 
 ## Contact
 
-For research questions, collaboration, or access inquiries, contact the Intelligent Global Health Research Group at EPFL.
+For research questions, collaboration, or data-access inquiries, contact the Laboratory for Intelligent Global Health and Humanitarian Response Technologies (LiGHT) at EPFL.
