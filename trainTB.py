@@ -487,8 +487,7 @@ def main(config):
     best_valid_loss = 10
     # Mixed precision training scaler (for faster training with less memory)
     scaler = GradScaler()
-    # Gradient accumulation steps (already set in config, kept here for reference)
-    accumulation_steps = 2
+    optimizer.zero_grad()
 
     # Training loop
     for epoch in range(config.nb_epochs):
@@ -496,8 +495,8 @@ def main(config):
         model.train()
         all_targets = []
         all_logits = []
-        counter = 0
         running_loss = 0
+        accum_count = 0
         for i, batch in enumerate(tqdm(train_loader, desc="Training", unit="batch")):
             #target_l.extend([*(batch["label"].cpu().numpy()).astype('float')])
             labels = batch['label'].to(config.device).unsqueeze(1).float()
@@ -516,9 +515,9 @@ def main(config):
                     scores, attention = model(batch["images"], batch["sites"], batch["mask"])
                     # Compute binary cross-entropy loss with class weighting
                     loss = criterion(scores, labels)
+                    running_loss += loss.item()
                     # Scale loss by accumulation steps (gradient accumulation)
                     loss = loss / config.accumulation_steps
-                    running_loss += loss.item()
                     
                 # Store predictions and targets for epoch-level metrics
                 all_targets.append(labels.detach())
@@ -526,15 +525,16 @@ def main(config):
 
                 # Backward pass with gradient scaling (for mixed precision)
                 scaler.scale(loss).backward()
+                accum_count += 1
 
-                # Update weights every accumulation_steps batches
-                if (i + 1) % config.accumulation_steps == 0:
-                    # Gradient clipping to prevent exploding gradients
+                # Step every accumulation_steps micro-batches, and flush leftovers at epoch end
+                if accum_count == config.accumulation_steps or (i + 1) == len(train_loader):
+                    scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                    # Update optimizer and scaler
                     scaler.step(optimizer)
                     scaler.update()
                     optimizer.zero_grad()
+                    accum_count = 0
                     
                 # Memory management: clear GPU cache after each batch
                 torch.cuda.empty_cache()
@@ -547,16 +547,10 @@ def main(config):
                     print('WARNING: ran out of memory, skipping batch')
                     torch.cuda.empty_cache()
                     optimizer.zero_grad()
+                    accum_count = 0
                     continue
                 else:
                     raise e
-                
-            # Backward pass
-            #optimizer.zero_grad()
-            #loss.backward()
-            # Update parameters of the model
-            #optimizer.step()
-            #counter += 1
 
         scheduler.step()
         torch.cuda.empty_cache()  
