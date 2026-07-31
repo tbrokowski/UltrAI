@@ -1,20 +1,106 @@
 cff-version: 1.2.0
-message: "If you use ULTR-AI in your research, please cite the archived software release."
-title: "ULTR-AI: Lung Ultrasound Tuberculosis and Pathology Classification"
+message: >-
+  If you use ULTR-AI, please cite the version-specific software release and
+  the associated research article below.
+title: "ULTR-AI: Ultrasound-led TB Recognition Using AI"
 type: software
 version: 1.0.0
 authors:
-  - name: "Intelligent Global Health Research Group, EPFL"
-abstract: >
-  ULTR-AI is research software for training and evaluating deep learning
-  models for tuberculosis and lung pathology classification using lung
-  ultrasound images.
+  - family-names: Brokowski
+    given-names: Trevor
+    affiliation: "Laboratory for Intelligent Global Health and Humanitarian Response Technologies (LiGHT), EPFL"
+abstract: >-
+  ULTR-AI is research software for developing and evaluating artificial
+  intelligence models that analyze lung ultrasound for pulmonary tuberculosis
+  triage. The codebase supports direct image-to-TB prediction, prediction of
+  human-recognizable lung ultrasound signs, patient-level aggregation, and
+  evaluation against study outcome labels.
 repository-code: "https://github.com/tbrokowski/UltrAI"
 url: "https://github.com/tbrokowski/UltrAI"
 license: Apache-2.0
 keywords:
   - artificial intelligence
   - deep learning
+  - diagnostic accuracy
+  - global health
   - lung ultrasound
   - medical imaging
+  - point-of-care ultrasound
   - tuberculosis
+  - triage
+preferred-citation:
+  type: article
+  title: >-
+    Lung Ultrasound for the Detection of Pulmonary Tuberculosis Using Expert-
+    and AI-Guided Interpretation: A Prospective Cohort Study
+  authors:
+    - family-names: Suttels
+      given-names: Véronique
+      affiliation: "University of Lausanne - Service of Infectious Diseases"
+    - family-names: Brokowski
+      given-names: Trevor
+      affiliation: "Yale University"
+    - family-names: Wachinou
+      given-names: Ablo Prudence
+      affiliation: "Université d'Abomey-Calavi - Faculty of Health Sciences"
+    - family-names: Wolleb
+      given-names: Julia
+      affiliation: "Yale University"
+    - family-names: Hada
+      given-names: Aboudou Rasisou
+      affiliation: "National Teaching Hospital for Tuberculosis and Pulmonary Diseases"
+    - family-names: Du Toit
+      given-names: Jacques Daniel
+      affiliation: "University of the Witwatersrand"
+    - family-names: Fiogbe
+      given-names: Arnauld Attannon
+      affiliation: "National Teaching Hospital for Tuberculosis and Pulmonary Diseases"
+    - family-names: Guendehou
+      given-names: Brice
+      affiliation: "National Teaching Hospital for Tuberculosis and Pulmonary Diseases"
+    - family-names: Alovokpinhou
+      given-names: Frederic
+      affiliation: "National Teaching Hospital for Tuberculosis and Pulmonary Diseases"
+    - family-names: Sefou
+      given-names: Fadyl
+      affiliation: "National Teaching Hospital for Tuberculosis and Pulmonary Diseases"
+    - family-names: Makpemikpa
+      given-names: Ginette
+      affiliation: "National Teaching Hospital for Tuberculosis and Pulmonary Diseases"
+    - family-names: Bessat
+      given-names: Cécile
+      affiliation: "University of Lausanne - Service of Infectious Diseases"
+    - family-names: Roux
+      given-names: Alexia
+      affiliation: "University of Lausanne - Service of Infectious Diseases"
+    - family-names: Garcia
+      given-names: Elena
+      affiliation: "University of Lausanne - Emergency Department"
+    - family-names: Brahier
+      given-names: Thomas
+      affiliation: "University of Lausanne - Service of Infectious Diseases"
+    - family-names: Opota
+      given-names: Onya
+      affiliation: "University of Lausanne - Institute of Microbiology"
+    - family-names: Doenz
+      given-names: Jonathan
+      affiliation: "École Polytechnique Fédérale de Lausanne (EPFL)"
+    - family-names: Vignoud
+      given-names: Julien
+      affiliation: "École Polytechnique Fédérale de Lausanne (EPFL)"
+    - family-names: Agodokpessi
+      given-names: Gildas
+      affiliation: "Université d'Abomey-Calavi - Faculty of Health Sciences"
+    - family-names: Affolabi
+      given-names: Dissou
+      affiliation: "Université d'Abomey-Calavi"
+    - family-names: Hartley
+      given-names: Mary-Anne
+      affiliation: "École Polytechnique Fédérale de Lausanne (EPFL) - Intelligent Global Health, Machine Learning and Optimization Laboratory"
+    - family-names: Boillat-Blanco
+      given-names: Noémie
+      affiliation: "University of Lausanne - Service of Infectious Diseases"
+  doi: "10.2139/ssrn.5174193"
+  journal: "SSRN"
+  url: "https://ssrn.com/abstract=5174193"
+  year: 2025
