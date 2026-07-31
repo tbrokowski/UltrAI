@@ -1,292 +1,159 @@
-# ULTR-AI: Lung Ultrasound Tuberculosis and Pathology Classification
+# ULTR-AI
 
-This repository contains the codebase for training deep learning models to classify tuberculosis (TB) and various lung ultrasound (LUS) pathology patterns from LUS images.
+**Deep learning for tuberculosis and lung pathology classification from lung ultrasound**
 
-## Overview
+ULTR-AI is a research codebase for developing and evaluating deep learning models that classify tuberculosis (TB) and lung ultrasound (LUS) pathology patterns. It supports patient-level TB classification across multiple ultrasound views and image-level classification of individual pathology features.
 
-The ULTR-AI project provides two main training scripts:
+> **Research use only:** ULTR-AI is not a certified medical device and must not be used for clinical diagnosis or patient-management decisions without appropriate validation and regulatory review.
 
-1. **trainTB.py**: Patient-level TB classification (TB+ vs TB-)
-   - Aggregates multiple LUS images per patient
-   - Uses attention-based pooling to combine features from different anatomical sites
-   - Trains on patient-level labels
+## Scope
 
-2. **train_pathology.py**: Image-level pathology classification
-   - Classifies individual pathology features in LUS images
-   - Supports multiple pathology types: A-lines, B-lines, consolidations, pleural effusion
-   - Can train separate models for each pathology feature
+The repository provides two principal workflows:
 
-## Project Structure
+1. **Patient-level TB classification** using multiple LUS images per participant and attention-based feature aggregation.
+2. **Image-level pathology classification** for A-lines, B-lines, coalescing B-lines, consolidations, nodules, and pleural effusion.
 
-```
+## Repository structure
+
+```text
 UltrAI/
-├── trainTB.py                 # Main script for TB classification training
-├── train_pathology.py         # Main script for pathology classification training
-├── predictTBImage.py          # Script for making predictions with trained models
-├── data/                      # Data directory
-│   ├── images/               # LUS images (PNG format)
-│   ├── labels/               # Label CSV files
-│   └── Splits/               # Train/validation/test split files
-├── evaluation/               # Evaluation metrics and model evaluation
-│   ├── metrics.py            # Metric computation functions
-│   └── model_evaluation.py   # Model evaluation utilities
-├── network_architecture/     # Model architectures
-│   ├── resnet.py            # ResNet backbone
-│   ├── pooling.py           # Aggregation/pooling layers
-│   └── trainingutils.py     # Training utilities
-├── dataloaders/             # Data loading utilities
-└── data-processing/         # Data preprocessing scripts
+├── trainTB.py                  # Patient-level TB training
+├── train_pathology.py          # Image-level pathology training
+├── predictTBImage.py           # Model inference and prediction
+├── dataset_loading/            # Dataset and preprocessing utilities
+├── evaluation/                 # Metrics and evaluation workflows
+├── network_architecture/       # Model and pooling architectures
+├── utilities/                  # Configuration and shared utilities
+├── data/
+│   ├── labels/                 # Study IDs and outcome labels
+│   └── Splits/                 # Predefined train/validation/test folds
+├── requirements.txt
+├── CITATION.cff
+└── LICENSE
 ```
-
-## Prerequisites
-
-- Python 3.7 or higher
-- CUDA-capable GPU (recommended) or CPU
-- DeepChest package (located in `/Users/trevorbrokowski/Downloads/deepchest`)
 
 ## Installation
 
-### 1. Install Python Dependencies
+Python 3.9 or newer is recommended. A CUDA-capable GPU is recommended for training but is not required for basic code inspection or CPU execution.
 
 ```bash
-cd "/Users/trevorbrokowski/Desktop/ULTR-AI 2/UltrAI"
-pip install -r requirements.txt
+git clone https://github.com/tbrokowski/UltrAI.git
+cd UltrAI
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-### 2. Set Up DeepChest Package
+Run commands from the repository root so that the local packages resolve correctly.
 
-The `deepchest` package is now included in the ULTR-AI folder. You need to ensure it's accessible in your Python path:
+## Data organization
 
-**Option A: Add to PYTHONPATH (Recommended)**
-```bash
-export PYTHONPATH="/Users/trevorbrokowski/Desktop/ULTR-AI 2/UltrAI:$PYTHONPATH"
-```
+The patient-level workflow expects the following layout:
 
-**Option B: Install as package**
-```bash
-cd "/Users/trevorbrokowski/Desktop/ULTR-AI 2/UltrAI"
-pip install -e .
-```
-
-### 3. Verify Installation
-
-```bash
-cd "/Users/trevorbrokowski/Desktop/ULTR-AI 2/UltrAI"
-python3 -c "import sys; sys.path.insert(0, '.'); from deepchest.utilities import config_utils, utils; print('✓ DeepChest import successful')"
-```
-
-## Data Preparation
-
-### Required Data Files
-
-1. **Images Directory**: Directory containing LUS images
-   - Format: `{patient_id}_{site}_{optional_number}.png`
-   - Example: `12345_QAID_1.png`
-   - Sites: QAID, QAIG, QASD, QASG, QLD, QLG, QPID, QPIG, QPSD, QPSG, APXD, APXG, QSLD, QSLG
-
-2. **Labels File (for TB training)**:
-   - CSV file with columns: `record_id`, `TB Label`
-   - `record_id`: Patient ID (integer)
-   - `TB Label`: Binary label (0 = TB-, 1 = TB+)
-
-3. **Labels File (for pathology training)**:
-   - CSV file with columns: `path`, and pathology feature columns
-   - `path`: Path to image file
-   - Feature columns: `A-lines`, `B-lines`, `Large Consolidations`, etc. (binary: 0 or 1)
-
-4. **Split File**:
-   - CSV file with columns: `train_ids`, `valid_ids`, `test_ids`
-   - Contains patient IDs for each split
-
-### Example Data Structure
-
-```
+```text
 data/
 ├── images/
 │   ├── 12345_QAID_1.png
 │   ├── 12345_QAIG_1.png
-│   ├── 12345_QASD_1.png
 │   └── ...
 ├── labels/
-│   ├── pivotedlabels.csv        # For TB training
-│   └── imagedf.csv              # For pathology training
+│   └── sensitivity_analysis_labels.csv
 └── Splits/
     ├── Fold_0.csv
     ├── Fold_1.csv
-    └── ...
+    ├── Fold_2.csv
+    ├── Fold_3.csv
+    └── Fold_4.csv
 ```
+
+The label file contains:
+
+- `record_id`: pseudonymous study participant identifier
+- `TB Label`: binary TB outcome label
+
+Each split file contains `train_ids`, `valid_ids`, and `test_ids`. Image filenames encode the study identifier and anatomical scan site.
+
+Access to and redistribution of research data must remain consistent with the relevant consent, ethics approval, and data-use agreements. Do not add linkage keys or information that would permit participant re-identification.
 
 ## Usage
 
-### Training TB Classification Model
+### Patient-level TB classification
 
 ```bash
-cd "/Users/trevorbrokowski/Desktop/ULTR-AI 2/UltrAI"
-
-# Basic usage (uses default config)
-python3 trainTB.py
-
-# With command-line overrides
-python3 trainTB.py --learning_rate 0.0005 --batch_size 32 --images_directory /path/to/images
-
-# Override nested config values
-python3 trainTB.py --resnet.freeze False --aggregation_type "Transformer"
+python trainTB.py
 ```
 
-**Key Configuration Parameters:**
-- `images_directory`: Path to directory containing LUS images
-- `labels_file`: Path to CSV file with patient labels
-- `test_indices_file`: Path to CSV file with train/val/test splits
-- `save_dir`: Directory to save model checkpoints
-- `pred_save_dir`: Directory to save prediction CSV files
-- `learning_rate`: Learning rate (default: 0.001)
-- `batch_size`: Batch size (default: 16)
-- `pos_weight`: Positive class weight for handling imbalance (default: 1.6)
-- `nb_epochs`: Number of training epochs (default: 75)
-
-### Training Pathology Classification Model
+Configuration values can be overridden from the command line:
 
 ```bash
-cd "/Users/trevorbrokowski/Desktop/ULTR-AI 2/UltrAI"
-
-# Train A-lines classifier on Fold 0
-python3 train_pathology.py '{"feature": "A-lines", "fold": 0, "pos_weight": 1.6}'
-
-# Train B-lines classifier
-python3 train_pathology.py '{"feature": "B-lines", "fold": 0, "pos_weight": 1.8}'
-
-# Train Large Consolidations classifier
-python3 train_pathology.py '{"feature": "Large Consolidations", "fold": 0, "pos_weight": 3}'
-
-# Train on different fold
-python3 train_pathology.py '{"feature": "A-lines", "fold": 1, "pos_weight": 1.6, "run_id": "1"}'
+python trainTB.py \
+  --images_directory /path/to/images \
+  --labels_file /path/to/labels.csv \
+  --test_indices_file /path/to/Fold_0.csv \
+  --learning_rate 0.0005 \
+  --batch_size 16
 ```
 
-**Key Configuration Parameters (JSON format):**
-- `feature`: Pathology feature to classify (required)
-  - Options: "A-lines", "B-lines", "Coalescing B-lines", "Small consolidations and or nodules", "Large Consolidations", "Pleural effusion"
-- `fold`: Cross-validation fold number (0-4, default: 0)
-- `run_id`: Unique identifier for this run (default: '1')
-- `pos_weight`: Positive class weight (default: 4.0)
-- `learning_rate`: Learning rate (default: 0.00001)
-- `batch_size`: Batch size (default: 32)
-- `nb_epochs`: Number of epochs (default: 25)
+### Image-level pathology classification
 
-## Model Architecture
+Pass configuration overrides as JSON:
 
-### DeepChest Model
+```bash
+python train_pathology.py '{"feature":"A-lines","fold":0,"pos_weight":1.6}'
+```
 
-The model consists of three main components:
+Other supported targets include B-lines, coalescing B-lines, small consolidations or nodules, large consolidations, and pleural effusion.
 
-1. **Image Encoder (ResNet)**: Extracts features from individual LUS images
-   - Uses pretrained ResNet (default: ResNet18)
-   - Can be frozen or fine-tuned
-   - Output: 512-dimensional feature vectors
+## Model architecture
 
-2. **Aggregation Network**: Combines features from multiple images per patient
-   - Options: MLP_AttentionPooling, Transformer, DeepSet, Max/Mean Pooling
-   - Uses positional embeddings for anatomical sites
-   - Handles variable number of images per patient
+ULTR-AI combines:
 
-3. **Classifier**: Final classification layer
-   - Binary classification: TB+ vs TB- or pathology present/absent
-   - Uses weighted BCE loss to handle class imbalance
+- A pretrained convolutional image encoder, typically ResNet-18
+- Optional positional encoding for anatomical scan sites
+- Attention, Transformer, DeepSet, maximum, or mean aggregation
+- A binary classifier optimized with class-weighted loss
 
-## Output Files
+## Evaluation
 
-### Training Outputs
+The evaluation utilities report:
 
-1. **Model Checkpoints**:
-   - `checkpoint_best.pth`: Best model based on validation metric
-   - `highsens.pth`: Model with high sensitivity (>0.9) and specificity (>0.8)
-   - `highauroclowerloss.pth`: Model with high AUC (>0.95) and low loss
+- Accuracy
+- Sensitivity
+- Specificity
+- Balanced accuracy
+- ROC–AUC
+- Area under the precision–recall curve
+- F1 score
+- Confusion matrix
 
-2. **Configuration**:
-   - `config.yaml`: Saved configuration for reproducibility
+Train, validation, and test predictions can be exported as CSV files. Model checkpoints and generated outputs are excluded from version control by default.
 
-3. **Predictions**:
-   - `{feature}_trainpredictions.csv`: Predictions on training set
-   - `{feature}_validpredictions.csv`: Predictions on validation set
-   - `{feature}_testpredictions.csv`: Predictions on test set
+## Reproducibility
 
-4. **Indices**:
-   - `{run_name}_indices.csv`: Train/validation/test split indices
+The repository records the default random seed, predefined cross-validation folds, model configuration, and evaluation procedures. Before creating the manuscript release:
 
-## Evaluation Metrics
-
-The models are evaluated using the following metrics:
-
-- **Accuracy**: Overall classification accuracy
-- **Sensitivity (Recall)**: True positive rate
-- **Specificity**: True negative rate
-- **ROC-AUC**: Area under the ROC curve
-- **F1-Score**: Harmonic mean of precision and recall
-- **Confusion Matrix**: Detailed breakdown of predictions
-
-## Troubleshooting
-
-### Import Errors
-
-If you encounter `ModuleNotFoundError: No module named 'deepchest'`:
-
-1. Verify the deepchest package exists at `/Users/trevorbrokowski/Downloads/deepchest`
-2. Add it to PYTHONPATH: `export PYTHONPATH="/Users/trevorbrokowski/Downloads:$PYTHONPATH"`
-3. Or install it: `cd /Users/trevorbrokowski/Downloads/deepchest && pip install -e .`
-
-### CUDA Out of Memory
-
-If you run out of GPU memory:
-
-1. Reduce `batch_size` in config
-2. Increase `accumulation_steps` to maintain effective batch size
-3. Enable gradient checkpointing (if supported)
-4. Use smaller model (e.g., ResNet18 instead of ResNet50)
-
-### Data Loading Issues
-
-- Verify image filenames match expected format: `{patient_id}_{site}_{optional}.png`
-- Check that patient IDs in labels file match image filenames
-- Ensure split files contain valid patient IDs
-- Verify CSV files have correct column names
-
-### Path Issues
-
-- Update paths in `get_config()` functions to match your data locations
-- Use absolute paths for better reliability
-- Ensure all directories exist or will be created
-
-## Configuration Files
-
-Both training scripts use `ml_collections.ConfigDict` for configuration management. You can:
-
-1. Modify default values in `get_config()` functions
-2. Override via command-line arguments (trainTB.py)
-3. Override via JSON arguments (train_pathology.py)
-4. Edit saved `config.yaml` files for reference
+1. Validate the full workflow in a clean environment.
+2. Export the exact working dependency versions to a lock file.
+3. Record the final model configuration and random seed.
+4. Confirm that the archived release matches the code used for the reported results.
+5. Document how authorized researchers can obtain any non-redistributable data or model artifacts.
 
 ## Citation
 
-If you use this code, please cite:
+Citation metadata are provided in [`CITATION.cff`](CITATION.cff). After the manuscript release is archived in Zenodo, add the assigned DOI to that file and place the Zenodo badge at the top of this README.
 
-```
-Intelligent Global Health Research Group, EPFL
-ULTR-AI: Deep Learning for Lung Ultrasound Tuberculosis Classification
-2023
-```
+Suggested software title:
+
+> *ULTR-AI: Lung Ultrasound Tuberculosis and Pathology Classification*
+
+For academic work, cite the version-specific Zenodo DOI corresponding to the exact release used in the study.
 
 ## License
 
-Apache License 2.0
+This project is licensed under the [Apache License 2.0](LICENSE).
 
 ## Contact
 
-For questions or issues, please contact the Intelligent Global Health Research Group at EPFL.
-
-## Additional Notes
-
-- The code uses mixed precision training (AMP) for faster training and lower memory usage
-- Early stopping is implemented to prevent overfitting
-- Models are saved based on validation performance, not training performance
-- Class balancing is used in pathology training to handle imbalanced datasets
-- Data augmentation is applied during training but not during validation/testing
-
+For research questions, collaboration, or access inquiries, contact the Intelligent Global Health Research Group at EPFL.
