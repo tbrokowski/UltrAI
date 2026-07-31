@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments and local configuration
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Raw imaging data and restricted exports
+data/images/
+*.dcm
+*.nii
+*.nii.gz
+
+# Training outputs and model artifacts
+results/
+outputs/
+checkpoints/
+wandb/
+*.pth
+*.pt
+*.ckpt
+
+# Generated predictions and logs
+predictions/
+*.log
