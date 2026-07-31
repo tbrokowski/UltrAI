@@ -1,0 +1,15 @@
+# Minimum runtime dependencies.
+# Before the manuscript release, export the exact validated environment
+# to an additional lock file for full computational reproducibility.
+matplotlib>=3.7
+ml-collections>=0.1.1
+numpy>=1.24
+opencv-python>=4.8
+pandas>=2.1
+PyYAML>=6.0
+scikit-learn>=1.3
+timm>=0.9
+torch>=2.0
+torchvision>=0.15
+tqdm>=4.65
+wandb>=0.15

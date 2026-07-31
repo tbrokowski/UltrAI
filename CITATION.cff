@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use ULTR-AI in your research, please cite the archived software release."
+title: "ULTR-AI: Lung Ultrasound Tuberculosis and Pathology Classification"
+type: software
+version: 1.0.0
+authors:
+  - name: "Intelligent Global Health Research Group, EPFL"
+abstract: >
+  ULTR-AI is research software for training and evaluating deep learning
+  models for tuberculosis and lung pathology classification using lung
+  ultrasound images.
+repository-code: "https://github.com/tbrokowski/UltrAI"
+url: "https://github.com/tbrokowski/UltrAI"
+license: Apache-2.0
+keywords:
+  - artificial intelligence
+  - deep learning
+  - lung ultrasound
+  - medical imaging
+  - tuberculosis
