@@ -70,6 +70,7 @@ Run commands from the repository root so that the local packages resolve correct
 Participant-level LUS images, analysis labels, and predefined splits are distributed as a **gated** Hugging Face dataset:
 
 - **Dataset:** [ULTR-AI Lung Ultrasound Dataset](https://huggingface.co/datasets/tbrokowski/ultrai-lung-ultrasound)
+- **DOI:** [https://doi.org/10.57967/hf/9798](https://doi.org/10.57967/hf/9798)
 - **Access:** request access on the Hugging Face dataset page (institutional review and data-use agreement required)
 - **Contents:** `images/` + `images_01/` (sharded PNG directories), `labels/`, and `Splits/`
 
@@ -174,7 +175,7 @@ These statements describe the reported study. They do not independently authoriz
 
 Citation metadata are provided in [`CITATION.cff`](CITATION.cff). Cite as appropriate:
 
-- **The gated dataset**, *ULTR-AI Lung Ultrasound Dataset*. Hugging Face. https://huggingface.co/datasets/tbrokowski/ultrai-lung-ultrasound
+- **The gated dataset**, *ULTR-AI Lung Ultrasound Dataset*. Hugging Face. https://doi.org/10.57967/hf/9798
 - **The software release**, Zenodo. https://doi.org/10.5281/zenodo.21735704
 - **The associated research article**, SSRN DOI [`10.2139/ssrn.5174193`](https://doi.org/10.2139/ssrn.5174193)
 
