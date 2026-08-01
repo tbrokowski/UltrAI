@@ -19,8 +19,8 @@ env/
 .idea/
 .vscode/
 
-# Raw imaging data and restricted exports
-data/images/
+# Local dataset checkout (download from Hugging Face; not tracked)
+data/
 *.dcm
 *.nii
 *.nii.gz
@@ -37,6 +37,3 @@ wandb/
 # Generated predictions and logs
 predictions/
 *.log
-
-# Restricted clinical / demographic exports
-data/clinical_data/

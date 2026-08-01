@@ -43,11 +43,7 @@ UltrAI/
 ├── evaluation/                 # Metrics and evaluation workflows
 ├── network_architecture/       # Model and pooling architectures
 ├── utilities/                  # Configuration and shared utilities
-├── data/
-│   ├── clinical_data/          # Study-level clinical variables
-│   ├── labels/                 # Study IDs and analysis labels
-│   ├── Splits/                 # Predefined train/validation/test folds
-│   └── README.md               # Provenance, schema, and governance notes
+├── data/                       # Local dataset checkout (gitignored)
 ├── requirements.txt
 ├── CITATION.cff
 └── LICENSE
@@ -71,18 +67,38 @@ Run commands from the repository root so that the local packages resolve correct
 
 ## Data
 
-See [`data/README.md`](data/README.md) for:
+Participant-level LUS images, analysis labels, and predefined splits are distributed as a **gated** Hugging Face dataset:
 
-- Study provenance and cohort-level descriptors
-- File-level schemas and label interpretation
-- Split organization and leakage-prevention requirements
-- Ethics, consent, privacy, and licensing boundaries
+- **Dataset:** [ULTR-AI Lung Ultrasound Dataset](https://huggingface.co/datasets/tbrokowski/ultrai-lung-ultrasound)
+- **Access:** request access on the Hugging Face dataset page (institutional review and data-use agreement required)
+- **Contents:** `images/` + `images_01/` (sharded PNG directories), `labels/`, and `Splits/`
 
-The repository includes coded participant identifiers and clinical variables. Coded or pseudonymous data are not necessarily anonymous. Users are responsible for confirming that their access and intended use comply with the applicable consent, ethics approval, data-use agreements, institutional policy, and law.
+After approval, download and flatten image shards into the local `data/` layout expected by the training scripts:
+
+```bash
+hf download tbrokowski/ultrai-lung-ultrasound --repo-type dataset --local-dir ./data
+mkdir -p ./data/images_flat
+find ./data/images ./data/images_01 -type f -name '*.png' -exec mv {} ./data/images_flat/ \;
+rm -rf ./data/images ./data/images_01
+mv ./data/images_flat ./data/images
+```
+
+Expected local layout:
+
+```text
+data/
+├── images/
+├── labels/
+└── Splits/
+```
+
+Coded or pseudonymous identifiers are not necessarily anonymous. Users are responsible for confirming that their access and intended use comply with the applicable consent, ethics approval, data-use agreements, institutional policy, and law. Do not redistribute the dataset or attempt participant re-identification.
 
 ## Usage
 
 ### Patient-level TB classification
+
+With `data/` populated from the Hugging Face dataset:
 
 ```bash
 python trainTB.py
@@ -92,9 +108,9 @@ Configuration values can be overridden from the command line:
 
 ```bash
 python trainTB.py \
-  --images_directory /path/to/images \
-  --labels_file /path/to/labels.csv \
-  --test_indices_file /path/to/Fold_0.csv \
+  --images_directory ./data/images \
+  --labels_file ./data/labels/sensitivity_analysis_labels.csv \
+  --test_indices_file ./data/Splits/Fold_0.csv \
   --learning_rate 0.0005 \
   --batch_size 16
 ```
@@ -156,14 +172,17 @@ These statements describe the reported study. They do not independently authoriz
 
 ## Citation
 
-Citation metadata are provided in [`CITATION.cff`](CITATION.cff). It distinguishes between:
+Citation metadata are provided in [`CITATION.cff`](CITATION.cff). Cite as appropriate:
 
+- **The gated dataset**, *ULTR-AI Lung Ultrasound Dataset*. Hugging Face. https://huggingface.co/datasets/tbrokowski/ultrai-lung-ultrasound
 - **The software release**, Zenodo. https://doi.org/10.5281/zenodo.21735704
 - **The associated research article**, SSRN DOI [`10.2139/ssrn.5174193`](https://doi.org/10.2139/ssrn.5174193)
 
+Do not cite the SSRN article DOI as a dataset DOI.
+
 ## License
 
-The source code is licensed under the [Apache License 2.0](LICENSE). This software license does **not** grant rights to participant data, clinical records, images, annotations, model weights, or other third-party material unless those materials are explicitly identified as covered by the license.
+The source code is licensed under the [Apache License 2.0](LICENSE). This software license does **not** grant rights to participant data, clinical records, images, annotations, model weights, or other third-party material. Dataset access and permitted use are governed by the gated Hugging Face release and applicable data-use agreements.
 
 ## Contact
 
