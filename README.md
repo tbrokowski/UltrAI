@@ -158,10 +158,8 @@ These statements describe the reported study. They do not independently authoriz
 
 Citation metadata are provided in [`CITATION.cff`](CITATION.cff). It distinguishes between:
 
-- **The software release**, which should receive its own version-specific archival DOI after a GitHub release is deposited in Zenodo
-- **The associated research article**, which has the SSRN DOI [`10.2139/ssrn.5174193`](https://doi.org/10.2139/ssrn.5174193)
-
-Until a software DOI is minted, cite the exact repository version or commit used and cite the associated manuscript. Do not use the SSRN article DOI as the software DOI.
+- **The software release**, Zenodo. https://doi.org/10.5281/zenodo.21735704
+- **The associated research article**, SSRN DOI [`10.2139/ssrn.5174193`](https://doi.org/10.2139/ssrn.5174193)
 
 ## License
 
