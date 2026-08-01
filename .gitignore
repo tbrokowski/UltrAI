@@ -37,3 +37,6 @@ wandb/
 # Generated predictions and logs
 predictions/
 *.log
+
+# Restricted clinical / demographic exports
+data/clinical_data/

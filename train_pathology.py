@@ -415,25 +415,25 @@ def get_data_loaders(config):
     test_loader = DataLoader(
             test_dataset,
             batch_size=config.batch_size,
-            shuffle=True,
+            shuffle=False,
             collate_fn=collate_fn1,
             num_workers=config.num_workers,
             pin_memory=torch.cuda.is_available(),
             worker_init_fn=seed_worker,
             generator=g,
-            drop_last=True
+            drop_last=False
         )
 
     valid_loader = DataLoader(
             val_dataset,
             batch_size=config.batch_size,
-            shuffle=True,
+            shuffle=False,
             collate_fn=collate_fn1,
             num_workers=config.num_workers,
             pin_memory=torch.cuda.is_available(),
             worker_init_fn=seed_worker,
             generator=g,
-            drop_last=True
+            drop_last=False
         )
     train_loader_no_aug = DataLoader(
             train_dataset_noaug,
@@ -540,7 +540,7 @@ def main(config):
     early_stopping_patience = 4
     best_valid_loss = 10
     scaler = GradScaler()
-    accumulation_steps = 4
+    optimizer.zero_grad()
 
     # Training loop
     for epoch in range(config.nb_epochs):
@@ -548,6 +548,7 @@ def main(config):
         running_loss = 0
         all_targets = []
         all_logits = []
+        accum_count = 0
        
         for i, batch in enumerate(tqdm(train_loader, desc="Training", unit="batch")):
 
@@ -564,19 +565,20 @@ def main(config):
                     # Forward pass
                     scores, attention = model(batch["images"], batch["sites"], batch["mask"])
                     loss = criterion(scores, labels)
-                    loss = loss / config.accumulation_steps
                     running_loss += loss.item()
-                    #scores = torch.flatten(scores)
-                    #logit_l.extend([*scores.detach().cpu().numpy()])
+                    loss = loss / config.accumulation_steps
                 all_targets.append(labels.detach())
                 all_logits.append(scores.detach())
 
                 scaler.scale(loss).backward()
+                accum_count += 1
 
-                if (i + 1) % config.accumulation_steps == 0:
+                # Step every accumulation_steps micro-batches, and flush leftovers at epoch end
+                if accum_count == config.accumulation_steps or (i + 1) == len(train_loader):
                     scaler.step(optimizer)
                     scaler.update()
                     optimizer.zero_grad()
+                    accum_count = 0
                 torch.cuda.empty_cache()  # Free up cache after each batch
                 del batch, loss
                 gc.collect()
@@ -586,30 +588,10 @@ def main(config):
                     print('WARNING: ran out of memory, skipping batch')
                     torch.cuda.empty_cache()
                     optimizer.zero_grad()
+                    accum_count = 0
                     continue
                 else:
                     raise e
-
-            #Forward Pass
-            #scores, _ = model(batch["images"], batch["sites"], batch["mask"])
-
-            #Filter out padded data from calculations
-            #masked_indices = batch["mask"].bool()
-            #valid_scores = scores[masked_indices]
-            #valid_labels = batch["label"][masked_indices]
-
-            #Computer loss 
-            # loss = criterion(valid_scores, valid_labels.float())
-            # running_loss += loss.item()
-
-
-            # all_targets.append(valid_labels.detach())
-            # all_logits.append(valid_scores.detach())
-
-            # Backward and optimize
-            # optimizer.zero_grad()
-            # loss.backward()
-            # optimizer.step()
             
         scheduler.step()
         torch.cuda.empty_cache()  
