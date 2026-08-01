@@ -71,12 +71,16 @@ Participant-level LUS images, analysis labels, and predefined splits are distrib
 
 - **Dataset:** [ULTR-AI Lung Ultrasound Dataset](https://huggingface.co/datasets/tbrokowski/ultrai-lung-ultrasound)
 - **Access:** request access on the Hugging Face dataset page (institutional review and data-use agreement required)
-- **Contents:** `images/`, `labels/`, and `Splits/`
+- **Contents:** `images/` + `images_01/` (sharded PNG directories), `labels/`, and `Splits/`
 
-After approval, download into the local `data/` layout expected by the training scripts:
+After approval, download and flatten image shards into the local `data/` layout expected by the training scripts:
 
 ```bash
 hf download tbrokowski/ultrai-lung-ultrasound --repo-type dataset --local-dir ./data
+mkdir -p ./data/images_flat
+find ./data/images ./data/images_01 -type f -name '*.png' -exec mv {} ./data/images_flat/ \;
+rm -rf ./data/images ./data/images_01
+mv ./data/images_flat ./data/images
 ```
 
 Expected local layout:
